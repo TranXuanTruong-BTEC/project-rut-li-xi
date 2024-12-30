@@ -1,38 +1,21 @@
 {
-    "private": true,
-    "type": "module",
-    "scripts": {
-        "build": "vite build",
-        "dev": "nodemon server.js",
-        "start": "node server.js"
-    },
-    "devDependencies": {
-        "autoprefixer": "^10.4.20",
-        "axios": "^1.7.4",
-        "concurrently": "^9.0.1",
-        "laravel-vite-plugin": "^1.0",
-        "postcss": "^8.4.47",
-        "tailwindcss": "^3.4.13",
-        "vite": "^6.0",
-        "nodemon": "^2.0.22"
-    },
     "name": "backend",
     "version": "1.0.0",
-    "description": "<p align=\"center\"><a href=\"https://laravel.com\" target=\"_blank\"><img src=\"https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg\" width=\"400\" alt=\"Laravel Logo\"></a></p>",
-    "main": "postcss.config.js",
-    "directories": {
-        "test": "tests"
+    "type": "module",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
     },
-    "keywords": [],
-    "author": "",
-    "license": "ISC",
     "dependencies": {
         "cors": "^2.8.5",
         "dotenv": "^16.4.7",
         "express": "^4.21.2",
-        "express-rate-limit": "^6.7.0",
-        "helmet": "^7.0.0",
+        "express-rate-limit": "^6.11.2",
+        "helmet": "^7.2.0",
         "jsonwebtoken": "^9.0.2",
         "node-fetch": "^3.3.2"
+    },
+    "devDependencies": {
+        "nodemon": "^2.0.22"
     }
 }
