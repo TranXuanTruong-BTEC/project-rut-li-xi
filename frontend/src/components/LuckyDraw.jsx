@@ -11,6 +11,8 @@ const BANKS = [
     { id: 'bidv', name: 'BIDV', logo: '/images/banks/bidv.png' }
 ];
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+
 export default function LuckyDraw() {
     const [isDrawing, setIsDrawing] = useState(false);
     const [result, setResult] = useState(null);
@@ -46,12 +48,11 @@ export default function LuckyDraw() {
 
             console.log('Sending request with token:', token); // Debug log
 
-            const response = await fetch('http://localhost:3000/api/lucky-draw', {
+            const response = await fetch(`${API_URL}/api/lucky-draw`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`,
-                    'Accept': 'application/json'
                 },
                 body: JSON.stringify({
                     amount: randomAmount,

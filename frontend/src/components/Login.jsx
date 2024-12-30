@@ -3,7 +3,7 @@ import React from 'react';
 export default function Login() {
     // Thay YOUR_CLIENT_ID bằng Discord Client ID của bạn
     const DISCORD_CLIENT_ID = '1323209415699988524';
-    const REDIRECT_URI = 'https://lucky-money-frontend-jhcqu76rk-truongs-projects-6085fc5a.vercel.app/';
+    const REDIRECT_URI = 'http://localhost:5173/callback';
     
     const DISCORD_LOGIN_URL = `https://discord.com/api/oauth2/authorize?client_id=${DISCORD_CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify%20guilds`;
 

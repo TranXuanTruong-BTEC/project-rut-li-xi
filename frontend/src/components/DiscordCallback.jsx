@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+
 export default function DiscordCallback() {
     const { setIsAuthenticated } = useAuth();
     const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export default function DiscordCallback() {
             try {
                 console.log('Attempting authentication with code:', code);
 
-                const response = await fetch('http://localhost:3000/api/auth/discord', {
+                const response = await fetch(`${API_URL}/api/auth/discord`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
