@@ -1,0 +1,1 @@
+const dataPath = path.join(__dirname, '../data/users.json'); 
