@@ -287,3 +287,25 @@
                  0 0 20px rgba(255, 215, 0, 0.3),
                  0 0 30px rgba(255, 215, 0, 0.1);
 }
+
+.countdown {
+    @apply text-4xl font-bold text-red-600 tracking-wider;
+    font-family: 'Digital-7', monospace;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.3);
+}
+
+.countdown-container {
+    @apply bg-white/90 p-6 rounded-lg shadow-inner;
+    backdrop-filter: blur(8px);
+    border: 2px solid rgba(255, 0, 0, 0.1);
+}
+
+.countdown-label {
+    @apply text-sm text-gray-500 uppercase tracking-wider;
+}
+
+/* Thêm font Digital-7 */
+@font-face {
+    font-family: 'Digital-7';
+    src: url('/fonts/digital-7.ttf') format('truetype');
+}

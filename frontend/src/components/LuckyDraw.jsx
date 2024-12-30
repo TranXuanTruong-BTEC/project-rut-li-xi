@@ -26,6 +26,34 @@ export default function LuckyDraw() {
     const [error, setError] = useState('');
     const [showFireworks, setShowFireworks] = useState(false);
     const [showCongrats, setShowCongrats] = useState(false);
+    const [timeLeft, setTimeLeft] = useState(null);
+    const [canDraw, setCanDraw] = useState(false);
+    const [countdown, setCountdown] = useState('');
+
+    useEffect(() => {
+        const checkTime = async () => {
+            try {
+                const response = await fetch(`${API_URL}/api/time-check`);
+                const data = await response.json();
+                setTimeLeft(data.timeLeft);
+                setCanDraw(data.canDraw);
+            } catch (error) {
+                console.error('Error checking time:', error);
+            }
+        };
+
+        checkTime();
+        const interval = setInterval(checkTime, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    useEffect(() => {
+        if (timeLeft) {
+            setCountdown(
+                `${timeLeft.days.toString().padStart(2, '0')}:${timeLeft.hours.toString().padStart(2, '0')}:${timeLeft.minutes.toString().padStart(2, '0')}:${timeLeft.seconds.toString().padStart(2, '0')}`
+            );
+        }
+    }, [timeLeft]);
 
     const handleDraw = async () => {
         if (!bankInfo.bank || !bankInfo.accountName || !bankInfo.accountNumber) {
@@ -97,6 +125,30 @@ export default function LuckyDraw() {
             setIsDrawing(false);
         }
     };
+
+    if (!canDraw && timeLeft) {
+        return (
+            <div className="min-h-screen bg-gradient-to-b from-yellow-100 via-red-50 to-pink-50 flex items-center justify-center">
+                <div className="bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
+                    <h1 className="lucky-text text-4xl font-bold text-red-600 mb-8">
+                        🧧 Lì Xì May Mắn 2025 🧧
+                    </h1>
+                    <p className="text-gray-600 mb-6">
+                        Chưa đến thời gian rút lì xì
+                    </p>
+                    <div className="countdown-container mb-6">
+                        <div className="countdown">{countdown}</div>
+                        <div className="countdown-label mt-2">
+                            Ngày : Giờ : Phút : Giây
+                        </div>
+                    </div>
+                    <p className="text-sm text-gray-500">
+                        Vui lòng quay lại vào 6 giờ sáng ngày mùng 1 Tết Ất Tỵ!
+                    </p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="relative min-h-screen bg-gradient-to-b from-yellow-100 via-red-50 to-pink-50 py-10 px-4 overflow-hidden">
