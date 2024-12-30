@@ -1,0 +1,20 @@
+{
+  "draws": {
+    "undefined": {
+      "amount": 5000,
+      "bankInfo": {
+        "bank": "mb",
+        "accountName": "fasfasads",
+        "accountNumber": "12213423"
+      },
+      "timestamp": "2024-12-30T09:42:14.403Z",
+      "paid": false
+    },
+    "1119427673035391036": {
+      "username": "truong20016244",
+      "discriminator": "0",
+      "avatar": "80931c93eac119af687e12fbda3d58b9",
+      "timestamp": "2024-12-30T09:44:10.388Z"
+    }
+  }
+}
