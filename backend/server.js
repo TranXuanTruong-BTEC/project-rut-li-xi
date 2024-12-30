@@ -56,7 +56,12 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-app.post('/api/auth/discord', async (req, res) => {
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 phút
+    max: 5 // 5 requests mỗi IP
+});
+
+app.post('/api/auth/discord', authLimiter, async (req, res) => {
     const { code } = req.body;
     
     if (!code) {
@@ -143,7 +148,12 @@ app.post('/api/auth/discord', async (req, res) => {
     }
 });
 
-app.post('/api/lucky-draw', async (req, res) => {
+const drawLimiter = rateLimit({
+    windowMs: 24 * 60 * 60 * 1000, // 24 giờ
+    max: 1 // 1 request mỗi IP
+});
+
+app.post('/api/lucky-draw', drawLimiter, async (req, res) => {
     console.log('Received request headers:', req.headers);
     console.log('Received request body:', req.body);
 

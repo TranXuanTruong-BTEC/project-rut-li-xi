@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+﻿import fetch from 'node-fetch';
 
 export async function sendDiscordNotification({ username, discordUsername, amount, userId }) {
     const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
@@ -6,12 +6,12 @@ export async function sendDiscordNotification({ username, discordUsername, amoun
     const message = {
         embeds: [{
             title: "🧧 Thông Báo Rút Lì Xì Thành Công 🎉",
-            description: `<@${userId}> (${discordUsername}) vừa rút thành công lì xì Tết Ất Tỵ 2025! 🐉`,
-            color: 0xFF0000, // Màu đỏ
+            description: `<@${userId}> vừa rút thành công lì xì Tết Ất Tỵ 2025! 🐉`,
+            color: 0xFF0000,
             fields: [
                 {
                     name: "👤 Tên Discord",
-                    value: discordUsername,
+                    value: `<@${userId}>`,  
                     inline: true
                 },
                 {
@@ -47,4 +47,4 @@ export async function sendDiscordNotification({ username, discordUsername, amoun
     } catch (error) {
         console.error('Discord notification error:', error);
     }
-} 
+}

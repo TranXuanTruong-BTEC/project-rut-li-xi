@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+﻿import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -15,7 +15,12 @@ export async function loadUsers() {
 }
 
 export async function saveUsers(data) {
-    await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
+    try {
+        await fs.writeFile(dataPath, JSON.stringify(data, null, 2));
+    } catch (error) {
+        console.error('Error saving users:', error);
+        throw new Error('Failed to save user data');
+    }
 }
 
 export async function hasUserDrawn(userId) {
@@ -30,4 +35,4 @@ export async function recordUserDraw(userId, drawData) {
         timestamp: new Date().toISOString()
     };
     await saveUsers(data);
-} 
+}
