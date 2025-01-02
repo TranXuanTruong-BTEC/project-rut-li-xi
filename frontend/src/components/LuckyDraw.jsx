@@ -61,8 +61,8 @@ function LuckyDraw() {
   const fetchRecentAndTopDraws = async () => {
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/draws/stats`);
-      setRecentDraws(response.data.recentDraws);
-      setTopDraws(response.data.topDraws);
+      setRecentDraws(response.data.recentDraws || []);
+      setTopDraws(response.data.topDraws || []);
     } catch (error) {
       console.error('Error fetching draws stats:', error);
     }
@@ -72,7 +72,7 @@ function LuckyDraw() {
     const CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
     const REDIRECT_URI = `${window.location.origin}/callback`;
     const scope = 'identify guilds';
-    
+
     window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}`;
   };
 
@@ -97,16 +97,16 @@ function LuckyDraw() {
       setLoading(true);
       setShowAnimation(true);
       const token = localStorage.getItem('token');
-      
+
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/api/lucky-draw`, 
+        `${import.meta.env.VITE_API_URL}/api/lucky-draw`,
         {
           bankName: bankInfo.bankName,
           accountNumber: bankInfo.accountNumber,
           accountName: bankInfo.accountName.toUpperCase()
         },
         {
-          headers: { 
+          headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           }
@@ -138,30 +138,34 @@ function LuckyDraw() {
       <div className="bg-white border-y border-red-200 py-2 shadow-inner">
         <div className="marquee-container overflow-hidden whitespace-nowrap">
           <div className="marquee-content inline-block animate-marquee">
-            {recentDraws.map((draw, index) => (
-              <span key={index} className="inline-flex items-center mx-4">
-                {draw.avatar ? (
-                  <img 
-                    src={draw.avatar}
-                    className="w-6 h-6 rounded-full mr-2"
-                    alt={draw.username}
-                    onError={(e) => {
-                      e.target.onerror = null; // Prevent infinite loop
-                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(draw.username)}&background=random&color=fff&size=32`;
-                    }}
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center mr-2">
-                    <span className="text-red-600 text-xs font-bold">
-                      {draw.username.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-                <span className="text-red-600">
-                  {draw.username} vừa rút được {draw.amount.toLocaleString('vi-VN')}đ 🧧
+            {recentDraws.length > 0 ? (
+              recentDraws.map((draw, index) => (
+                <span key={index} className="inline-flex items-center mx-4">
+                  {draw.avatar ? (
+                    <img
+                      src={draw.avatar}
+                      className="w-6 h-6 rounded-full mr-2"
+                      alt={draw.username}
+                      onError={(e) => {
+                        e.target.onerror = null; // Prevent infinite loop
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(draw.username)}&background=random&color=fff&size=32`;
+                      }}
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center mr-2">
+                      <span className="text-red-600 text-xs font-bold">
+                        {draw.username.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )}
+                  <span className="text-red-600">
+                    {draw.username} vừa rút được {draw.amount.toLocaleString('vi-VN')}đ 🧧
+                  </span>
                 </span>
-              </span>
-            ))}
+              ))
+            ) : (
+              <p className="text-red-600">Chưa có lượt rút nào gần đây.</p>
+            )}
           </div>
         </div>
       </div>
@@ -172,21 +176,25 @@ function LuckyDraw() {
             <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
               <h2 className="text-2xl font-bold text-red-800 mb-4">🏆 Top May Mắn</h2>
               <div className="space-y-4">
-                {topDraws.map((draw, index) => (
-                  <div key={index} className="flex items-center justify-between border-b pb-2">
-                    <div className="flex items-center">
-                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
-                      </div>
-                      <div>
-                        <p className="font-semibold">{draw.username}</p>
-                        <p className="text-sm text-gray-500">
-                          {draw.amount.toLocaleString('vi-VN')}đ
-                        </p>
+                {topDraws.length > 0 ? (
+                  topDraws.map((draw, index) => (
+                    <div key={index} className="flex items-center justify-between border-b pb-2">
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                          {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                        </div>
+                        <div>
+                          <p className="font-semibold">{draw.username}</p>
+                          <p className="text-sm text-gray-500">
+                            {draw.amount.toLocaleString('vi-VN')}đ
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-red-600">Chưa có lượt rút nào trong top.</p>
+                )}
               </div>
             </div>
           </div>
@@ -196,27 +204,29 @@ function LuckyDraw() {
               {user ? (
                 <>
                   <div className="text-center mb-8">
-                    <img 
-                      src={user.avatar} 
-                      alt="Avatar" 
+                    <img
+                      src={user.avatar}
+                      alt="Avatar"
                       className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-red-500"
                     />
                     <h1 className="text-2xl font-bold text-red-800">
                       Chào mừng, {user.username}!
                     </h1>
                   </div>
-                  
+
                   {!result && !showAnimation && (
                     <div className="mb-6 space-y-4">
                       <div>
                         <label className="block text-red-800 mb-2">Chọn Ngân Hàng</label>
                         <select
                           value={bankInfo.bankName}
-                          onChange={(e) => setBankInfo({...bankInfo, bankName: e.target.value})}
+                          onChange={(e) =>
+                            setBankInfo({ ...bankInfo, bankName: e.target.value })
+                          }
                           className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500 bg-white"
                         >
                           <option value="">-- Chọn ngân hàng --</option>
-                          {BANKS.map(bank => (
+                          {BANKS.map((bank) => (
                             <option key={bank.id} value={bank.name}>
                               {bank.name}
                             </option>
@@ -229,7 +239,9 @@ function LuckyDraw() {
                         <input
                           type="text"
                           value={bankInfo.accountNumber}
-                          onChange={(e) => setBankInfo({...bankInfo, accountNumber: e.target.value.replace(/\D/g, '')})}
+                          onChange={(e) =>
+                            setBankInfo({ ...bankInfo, accountNumber: e.target.value.replace(/\D/g, '') })
+                          }
                           className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
                           placeholder="Nhập số tài khoản"
                           maxLength="20"
@@ -241,14 +253,16 @@ function LuckyDraw() {
                         <input
                           type="text"
                           value={bankInfo.accountName}
-                          onChange={(e) => setBankInfo({...bankInfo, accountName: e.target.value.toUpperCase()})}
+                          onChange={(e) =>
+                            setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })
+                          }
                           className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
                           placeholder="Nhập tên chủ tài khoản"
                         />
                       </div>
                     </div>
                   )}
-                  
+
                   {showAnimation ? (
                     <div className="lucky-envelope">
                       <div className="envelope-body">
@@ -303,7 +317,7 @@ function LuckyDraw() {
               ) : (
                 <div className="text-center">
                   <h2 className="text-2xl font-bold text-red-800 mb-6">
-                    Đăng nhập để nhận lì xì Tết 2024
+                    Đăng nhập để nhận lì xì Tết 2025
                   </h2>
                   <button
                     onClick={handleDiscordLogin}
@@ -358,4 +372,4 @@ function LuckyDraw() {
   );
 }
 
-export default LuckyDraw; 
+export default LuckyDraw;
