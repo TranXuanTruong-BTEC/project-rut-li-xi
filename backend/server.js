@@ -621,6 +621,10 @@ app.get('/api/draws/stats', async (req, res) => {
   }
 });
 
+app.get('/', (req, res) => {
+  res.send('Welcome to Lucky Money API');
+});
+
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 }); 
