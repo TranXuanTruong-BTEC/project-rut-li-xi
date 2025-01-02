@@ -193,7 +193,7 @@ function LuckyDraw() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-red-600">Chưa có lượt rút nào trong top.</p>
+                  <p className="text-red-600">Chưa có lượt rút nào.</p>
                 )}
               </div>
             </div>
