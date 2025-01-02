@@ -6,20 +6,12 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        primary: {
-          50: '#fef2f2',
-          100: '#fee2e2',
-          500: '#ef4444',
-          600: '#dc2626',
-          700: '#b91c1c',
-        }
-      },
       animation: {
         'spin-slow': 'spin 3s linear infinite',
-      }
+        'bounce-slow': 'bounce 3s infinite',
+        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+      },
     },
   },
   plugins: [],
-}
-
+} 

@@ -1,8 +1,14 @@
+import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 
-export default function PrivateRoute({ children }) {
-    const { user } = useAuth();
-    
-    return user ? children : <Navigate to="/login" />;
-} 
+function PrivateRoute({ children }) {
+    const adminToken = localStorage.getItem('adminToken');
+
+    if (!adminToken) {
+        return <Navigate to="/admin" />;
+    }
+
+    return children;
+}
+
+export default PrivateRoute; 

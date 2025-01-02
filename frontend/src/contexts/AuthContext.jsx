@@ -1,21 +1,22 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [token, setToken] = useState(localStorage.getItem('token'));
 
-    useEffect(() => {
-        const token = localStorage.getItem('discord_token');
-        if (token) {
-            setIsAuthenticated(true);
-        }
-        setLoading(false);
-    }, []);
+    const login = (newToken) => {
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        setToken(null);
+    };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, setIsAuthenticated, loading }}>
+        <AuthContext.Provider value={{ token, login, logout }}>
             {children}
         </AuthContext.Provider>
     );

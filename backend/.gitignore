@@ -1,0 +1,16 @@
+# dependencies
+/node_modules
+
+# environment
+.env
+.env.local
+
+# logs
+*.log
+npm-debug.log*
+
+# runtime data
+data/users.json
+
+# misc
+.DS_Store 

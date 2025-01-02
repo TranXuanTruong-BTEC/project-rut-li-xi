@@ -1,319 +1,361 @@
-import React, { useState, useEffect } from 'react';
-import Marquee from './Marquee';
-import Firework from './Firework';
-import DragonAnimation from './DragonAnimation';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useAuth } from '../contexts/AuthContext';
+import { Decorations } from './Decorations';
 
 const BANKS = [
-    { id: 'vcb', name: 'Vietcombank', logo: '/images/banks/vcb.png' },
-    { id: 'tcb', name: 'Techcombank', logo: '/images/banks/tcb.png' },
-    { id: 'mb', name: 'MB Bank', logo: '/images/banks/mb.png' },
-    { id: 'acb', name: 'ACB', logo: '/images/banks/acb.png' },
-    { id: 'bidv', name: 'BIDV', logo: '/images/banks/bidv.png' }
+  { id: 'vcb', name: 'Vietcombank' },
+  { id: 'tcb', name: 'Techcombank' },
+  { id: 'mb', name: 'MB Bank' },
+  { id: 'acb', name: 'ACB' },
+  { id: 'bidv', name: 'BIDV' },
+  { id: 'vib', name: 'VIB' },
+  { id: 'vtp', name: 'ViettelPay' },
+  { id: 'momo', name: 'Ví Momo' },
+  { id: 'zalo', name: 'ZaloPay' },
 ];
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002';
+function LuckyDraw() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [result, setResult] = useState(null);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const [bankInfo, setBankInfo] = useState({
+    bankName: '',
+    accountNumber: '',
+    accountName: ''
+  });
+  const [recentDraws, setRecentDraws] = useState([]);
+  const [topDraws, setTopDraws] = useState([]);
 
-export default function LuckyDraw() {
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [result, setResult] = useState(null);
-    const [hasDrawn, setHasDrawn] = useState(false);
-    const [bankInfo, setBankInfo] = useState({
-        bank: '',
-        accountName: '',
-        accountNumber: ''
-    });
-    const [showForm, setShowForm] = useState(false);
-    const [error, setError] = useState('');
-    const [showFireworks, setShowFireworks] = useState(false);
-    const [showCongrats, setShowCongrats] = useState(false);
-    const [timeLeft, setTimeLeft] = useState(null);
-    const [canDraw, setCanDraw] = useState(false);
-    const [countdown, setCountdown] = useState('');
-
-    useEffect(() => {
-        const checkTime = async () => {
-            try {
-                const response = await fetch(`${API_URL}/api/time-check`);
-                const data = await response.json();
-                setTimeLeft(data.timeLeft);
-                setCanDraw(data.canDraw);
-            } catch (error) {
-                console.error('Error checking time:', error);
-            }
-        };
-
-        checkTime();
-        const interval = setInterval(checkTime, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    useEffect(() => {
-        if (timeLeft) {
-            setCountdown(
-                `${timeLeft.days.toString().padStart(2, '0')}:${timeLeft.hours.toString().padStart(2, '0')}:${timeLeft.minutes.toString().padStart(2, '0')}:${timeLeft.seconds.toString().padStart(2, '0')}`
-            );
-        }
-    }, [timeLeft]);
-
-    const handleDraw = async () => {
-        if (!bankInfo.bank || !bankInfo.accountName || !bankInfo.accountNumber) {
-            setError('Vui lòng điền đầy đủ thông tin ngân hàng');
-            return;
-        }
-
-        try {
-            setIsDrawing(true);
-            setError('');
-            
-            const amounts = [5000, 10000, 15000, 20000];
-            const randomAmount = amounts[Math.floor(Math.random() * amounts.length)];
-
-            // Kiểm tra token
-            const token = localStorage.getItem('discord_token');
-            if (!token) {
-                throw new Error('Vui lòng đăng nhập lại');
-            }
-
-            console.log('Sending request with token:', token); // Debug log
-
-            const response = await fetch(`${API_URL}/api/lucky-draw`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    amount: randomAmount,
-                    bankInfo: bankInfo
-                }),
-                credentials: 'include'
-            });
-
-            console.log('Response status:', response.status); // Debug log
-
-            const data = await response.json();
-            console.log('Response data:', data); // Debug log
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Có lỗi xảy ra khi rút lì xì');
-            }
-
-            // Lưu local và hiển thị kết quả
-            const drawData = {
-                id: Date.now(),
-                timestamp: new Date().toISOString(),
-                amount: randomAmount,
-                bankInfo: { ...bankInfo },
-                paid: false
-            };
-
-            localStorage.setItem(`draw_${drawData.id}`, JSON.stringify(drawData));
-            setResult({ amount: randomAmount });
-            setHasDrawn(true);
-            setIsDrawing(false);
-
-            window.dispatchEvent(new Event('storage'));
-            setShowFireworks(true);
-            setShowCongrats(true);
-            setTimeout(() => {
-                setShowFireworks(false);
-                setShowCongrats(false);
-            }, 5000);
-        } catch (error) {
-            console.error('Draw error:', error);
-            setError(error.message || 'Có lỗi xảy ra, vui lòng thử lại');
-            setIsDrawing(false);
-        }
-    };
-
-    if (!canDraw && timeLeft) {
-        return (
-            <div className="min-h-screen bg-gradient-to-b from-yellow-100 via-red-50 to-pink-50 flex items-center justify-center">
-                <div className="bg-white/80 backdrop-blur-md p-8 rounded-2xl shadow-2xl text-center max-w-md w-full mx-4">
-                    <h1 className="lucky-text text-4xl font-bold text-red-600 mb-8">
-                        🧧 Lì Xì May Mắn 2025 🧧
-                    </h1>
-                    <p className="text-gray-600 mb-6">
-                        Chưa đến thời gian rút lì xì
-                    </p>
-                    <div className="countdown-container mb-6">
-                        <div className="countdown">{countdown}</div>
-                        <div className="countdown-label mt-2">
-                            Ngày : Giờ : Phút : Giây
-                        </div>
-                    </div>
-                    <p className="text-sm text-gray-500">
-                        Vui lòng quay lại vào 6 giờ sáng ngày mùng 1 Tết Ất Tỵ!
-                    </p>
-                </div>
-            </div>
-        );
+  useEffect(() => {
+    // Kiểm tra token trong localStorage
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserData(token);
+    } else {
+      setLoading(false);
     }
+  }, []);
 
-    return (
-        <div className="relative min-h-screen bg-gradient-to-b from-yellow-100 via-red-50 to-pink-50 py-10 px-4 overflow-hidden">
-            <div className="clouds">
-                <div className="cloud cloud1"></div>
-                <div className="cloud cloud2"></div>
-                <div className="cloud cloud3"></div>
-            </div>
+  useEffect(() => {
+    fetchRecentAndTopDraws();
+  }, []);
 
-            <DragonAnimation />
+  const fetchUserData = async (token) => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/user`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setUser(response.data);
+    } catch (err) {
+      console.error('Error fetching user:', err);
+      localStorage.removeItem('token');
+      setError('Vui lòng đăng nhập lại');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            {showFireworks && <Firework />}
+  const fetchRecentAndTopDraws = async () => {
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/draws/stats`);
+      setRecentDraws(response.data.recentDraws);
+      setTopDraws(response.data.topDraws);
+    } catch (error) {
+      console.error('Error fetching draws stats:', error);
+    }
+  };
 
-            <div className="flower-container" />
+  const handleDiscordLogin = () => {
+    const CLIENT_ID = import.meta.env.VITE_DISCORD_CLIENT_ID;
+    const REDIRECT_URI = `${window.location.origin}/callback`;
+    const scope = 'identify guilds';
+    
+    window.location.href = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=${encodeURIComponent(scope)}`;
+  };
 
-            <div className="absolute top-0 left-0 right-0">
-                <div className="lights-decoration" />
-            </div>
+  const handleLogout = async () => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/logout`);
+      localStorage.removeItem('token');
+      setUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
+  };
 
-            <div className="max-w-md mx-auto">
-                <div className="relative bg-white/80 backdrop-blur-md rounded-2xl shadow-2xl p-8 border border-red-100">
-                    <div className="absolute -top-24 left-1/2 transform -translate-x-1/2 w-48 h-48">
-                        <img 
-                            src="/images/dragon-2024.png" 
-                            alt="Dragon 2024" 
-                            className="w-full h-full object-contain animate-float"
-                        />
-                    </div>
+  const handleDraw = async () => {
+    try {
+      // Validate bank info
+      if (!bankInfo.bankName || !bankInfo.accountNumber || !bankInfo.accountName) {
+        setError('Vui lòng điền đầy đủ thông tin ngân hàng');
+        return;
+      }
 
-                    <div className="pt-20">
-                        <h1 className="lucky-text text-4xl font-bold text-center text-red-600 mb-8">
-                            🧧 Lì Xì May Mắn 2025 🧧
-                        </h1>
+      setLoading(true);
+      setShowAnimation(true);
+      const token = localStorage.getItem('token');
+      
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/lucky-draw`, 
+        {
+          bankName: bankInfo.bankName,
+          accountNumber: bankInfo.accountNumber,
+          accountName: bankInfo.accountName.toUpperCase()
+        },
+        {
+          headers: { 
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-                        {!showForm ? (
-                            <button
-                                onClick={() => setShowForm(true)}
-                                className="w-full py-4 bg-gradient-to-r from-red-600 to-red-500 text-white rounded-lg font-bold text-lg hover:from-red-700 hover:to-red-600 transition-all transform hover:scale-105 shadow-lg"
-                            >
-                                Bắt đầu rút lì xì
-                            </button>
-                        ) : (
-                            <div className="space-y-6">
-                                <div className="grid grid-cols-2 gap-4">
-                                    {BANKS.map(bank => (
-                                        <button
-                                            key={bank.id}
-                                            onClick={() => setBankInfo({...bankInfo, bank: bank.id})}
-                                            className={`p-4 border-2 rounded-lg transition-all ${
-                                                bankInfo.bank === bank.id 
-                                                    ? 'border-red-500 bg-red-50' 
-                                                    : 'border-gray-200 hover:border-red-300'
-                                            }`}
-                                        >
-                                            <img src={bank.logo} alt={bank.name} className="h-8 mx-auto mb-2" />
-                                            <p className="text-sm text-center">{bank.name}</p>
-                                        </button>
-                                    ))}
-                                </div>
+      setTimeout(() => {
+        setResult(response.data);
+        setShowAnimation(false);
+      }, 2000);
+    } catch (err) {
+      console.error('Draw error:', err);
+      setError(err.response?.data?.error || 'Có lỗi xảy ra khi rút lì xì');
+      setShowAnimation(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                                <div className="space-y-4">
-                                    <input
-                                        type="text"
-                                        value={bankInfo.accountName}
-                                        onChange={(e) => setBankInfo({...bankInfo, accountName: e.target.value})}
-                                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all"
-                                        placeholder="Tên chủ tài khoản"
-                                    />
+  return (
+    <div className="min-h-screen bg-red-50 relative overflow-hidden">
+      <Decorations />
+      <div className="text-center py-6 bg-gradient-to-r from-red-600 to-yellow-500">
+        <h1 className="text-3xl font-bold text-white animate-bounce">
+          🎊 Chúc Mừng Năm Mới - Xuân Ất Tỵ 2025 🎊
+        </h1>
+      </div>
 
-                                    <input
-                                        type="text"
-                                        value={bankInfo.accountNumber}
-                                        onChange={(e) => setBankInfo({...bankInfo, accountNumber: e.target.value})}
-                                        className="w-full p-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:ring-2 focus:ring-red-200 transition-all"
-                                        placeholder="Số tài khoản"
-                                    />
-                                </div>
-
-                                {error && (
-                                    <div className="text-red-500 text-sm text-center bg-red-50 p-3 rounded-lg">
-                                        {error}
-                                    </div>
-                                )}
-
-                                <button
-                                    onClick={handleDraw}
-                                    disabled={isDrawing || hasDrawn}
-                                    className={`w-full py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-105 ${
-                                        isDrawing || hasDrawn
-                                            ? 'bg-gray-400 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-red-600 to-red-500 hover:from-red-700 hover:to-red-600 text-white shadow-lg'
-                                    }`}
-                                >
-                                    {isDrawing ? 'Đang rút...' : hasDrawn ? 'Đã rút lì xì' : 'Rút lì xì'}
-                                </button>
-
-                                {result && (
-                                    <div className="mt-6 text-center animate-fade-in">
-                                        <div className="text-2xl font-bold text-red-600 lucky-text">
-                                            🎉 Chúc mừng năm mới 2025 🎊
-                                        </div>
-                                        <div className="text-xl font-bold text-red-600 mt-2">
-                                            Bạn đã rút được {result.amount?.toLocaleString()}đ
-                                        </div>
-                                        <p className="text-sm text-gray-600 mt-2">
-                                            Tiền sẽ được chuyển vào tài khoản của bạn trong vòng 24h
-                                        </p>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {showCongrats && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm z-50">
-                    <div className="congrats-popup bg-gradient-to-br from-red-50 to-yellow-50 p-10 rounded-2xl shadow-2xl text-center max-w-lg mx-4">
-                        <div className="relative">
-                            <div className="absolute -top-6 -left-6 w-12 h-12 text-4xl animate-spin-slow">✨</div>
-                            <div className="absolute -top-6 -right-6 w-12 h-12 text-4xl animate-spin-slow">✨</div>
-                            
-                            <h2 className="text-4xl font-bold shimmer-text lucky-text mb-2">
-                                🎉 Chúc mừng bạn! 🎉
-                            </h2>
-                            
-                            <div className="mt-6 text-2xl font-semibold text-red-600 bg-red-50 rounded-lg p-4 shadow-inner">
-                                Bạn đã rút được 
-                                <div className="text-3xl font-bold mt-2 shimmer-text">
-                                    {result?.amount?.toLocaleString()}đ
-                                </div>
-                            </div>
-
-                            <div className="mt-8 space-y-3 text-lg">
-                                <p className="text-xl font-semibold text-red-600">
-                                    Chúc bạn năm mới ẤT TỴ 2025
-                                </p>
-                                <div className="grid grid-cols-2 gap-4 mt-4">
-                                    <div className="bg-red-50 p-3 rounded-lg transform hover:scale-105 transition-transform">
-                                        <p className="text-yellow-600">🐉 Vạn Sự Như Ý</p>
-                                    </div>
-                                    <div className="bg-yellow-50 p-3 rounded-lg transform hover:scale-105 transition-transform">
-                                        <p className="text-red-600">💰 Phát Tài Phát Lộc</p>
-                                    </div>
-                                    <div className="bg-yellow-50 p-3 rounded-lg transform hover:scale-105 transition-transform">
-                                        <p className="text-red-600">🏮 An Khang Thịnh Vượng</p>
-                                    </div>
-                                    <div className="bg-red-50 p-3 rounded-lg transform hover:scale-105 transition-transform">
-                                        <p className="text-yellow-600">✨ Tràn Đầy Hạnh Phúc</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="mt-8 text-sm text-gray-600 bg-white/80 p-4 rounded-lg">
-                                Tiền lì xì sẽ được chuyển vào tài khoản của bạn trong vòng 24h
-                            </div>
-
-                            <div className="absolute -bottom-6 -left-6 w-12 h-12 text-4xl animate-spin-slow">✨</div>
-                            <div className="absolute -bottom-6 -right-6 w-12 h-12 text-4xl animate-spin-slow">✨</div>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            <Marquee />
+      <div className="bg-white border-y border-red-200 py-2 shadow-inner">
+        <div className="marquee-container overflow-hidden whitespace-nowrap">
+          <div className="marquee-content inline-block animate-marquee">
+            {recentDraws.map((draw, index) => (
+              <span key={index} className="inline-flex items-center mx-4">
+                {draw.avatar ? (
+                  <img 
+                    src={draw.avatar}
+                    className="w-6 h-6 rounded-full mr-2"
+                    alt={draw.username}
+                    onError={(e) => {
+                      e.target.onerror = null; // Prevent infinite loop
+                      e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(draw.username)}&background=random&color=fff&size=32`;
+                    }}
+                  />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center mr-2">
+                    <span className="text-red-600 text-xs font-bold">
+                      {draw.username.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+                <span className="text-red-600">
+                  {draw.username} vừa rút được {draw.amount.toLocaleString('vi-VN')}đ 🧧
+                </span>
+              </span>
+            ))}
+          </div>
         </div>
-    );
-} 
+      </div>
+
+      <div className="container mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <div className="md:col-span-3">
+            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+              <h2 className="text-2xl font-bold text-red-800 mb-4">🏆 Top May Mắn</h2>
+              <div className="space-y-4">
+                {topDraws.map((draw, index) => (
+                  <div key={index} className="flex items-center justify-between border-b pb-2">
+                    <div className="flex items-center">
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'}
+                      </div>
+                      <div>
+                        <p className="font-semibold">{draw.username}</p>
+                        <p className="text-sm text-gray-500">
+                          {draw.amount.toLocaleString('vi-VN')}đ
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="md:col-span-6">
+            <div className="bg-white rounded-lg shadow-lg p-8">
+              {user ? (
+                <>
+                  <div className="text-center mb-8">
+                    <img 
+                      src={user.avatar} 
+                      alt="Avatar" 
+                      className="w-20 h-20 rounded-full mx-auto mb-4 border-4 border-red-500"
+                    />
+                    <h1 className="text-2xl font-bold text-red-800">
+                      Chào mừng, {user.username}!
+                    </h1>
+                  </div>
+                  
+                  {!result && !showAnimation && (
+                    <div className="mb-6 space-y-4">
+                      <div>
+                        <label className="block text-red-800 mb-2">Chọn Ngân Hàng</label>
+                        <select
+                          value={bankInfo.bankName}
+                          onChange={(e) => setBankInfo({...bankInfo, bankName: e.target.value})}
+                          className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500 bg-white"
+                        >
+                          <option value="">-- Chọn ngân hàng --</option>
+                          {BANKS.map(bank => (
+                            <option key={bank.id} value={bank.name}>
+                              {bank.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-red-800 mb-2">Số Tài Khoản</label>
+                        <input
+                          type="text"
+                          value={bankInfo.accountNumber}
+                          onChange={(e) => setBankInfo({...bankInfo, accountNumber: e.target.value.replace(/\D/g, '')})}
+                          className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
+                          placeholder="Nhập số tài khoản"
+                          maxLength="20"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-red-800 mb-2">Tên Chủ Tài Khoản</label>
+                        <input
+                          type="text"
+                          value={bankInfo.accountName}
+                          onChange={(e) => setBankInfo({...bankInfo, accountName: e.target.value.toUpperCase()})}
+                          className="w-full p-3 border-2 border-red-300 rounded-lg focus:outline-none focus:border-red-500"
+                          placeholder="Nhập tên chủ tài khoản"
+                        />
+                      </div>
+                    </div>
+                  )}
+                  
+                  {showAnimation ? (
+                    <div className="lucky-envelope">
+                      <div className="envelope-body">
+                        <div className="envelope-flap"></div>
+                        <div className="envelope-content">
+                          <div className="money-content">
+                            <div className="money"></div>
+                            <div className="money"></div>
+                            <div className="money"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="sparkles">
+                        <div className="sparkle"></div>
+                        <div className="sparkle"></div>
+                        <div className="sparkle"></div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {!result && (
+                        <button
+                          onClick={handleDraw}
+                          disabled={loading}
+                          className="w-full lucky-button text-white font-bold py-4 px-6 rounded-lg text-lg"
+                        >
+                          {loading ? 'Đang mở lì xì...' : 'Mở Lì Xì May Mắn'}
+                        </button>
+                      )}
+
+                      {result && (
+                        <div className="mt-6 text-center animate-fadeIn">
+                          <h2 className="text-xl font-bold text-red-800 mb-2">Chúc Mừng!</h2>
+                          <p className="text-4xl font-bold text-red-600 digital mb-4">
+                            {result.amount.toLocaleString('vi-VN')} VNĐ
+                          </p>
+                          <p className="text-red-800">
+                            Tiền sẽ được chuyển vào tài khoản của bạn trong thời gian sớm nhất!
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <button
+                    onClick={handleLogout}
+                    className="mt-6 w-full text-red-600 hover:text-red-800 text-sm"
+                  >
+                    Đăng xuất
+                  </button>
+                </>
+              ) : (
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-red-800 mb-6">
+                    Đăng nhập để nhận lì xì Tết 2024
+                  </h2>
+                  <button
+                    onClick={handleDiscordLogin}
+                    className="inline-block bg-[#5865F2] text-white font-bold py-4 px-8 rounded-lg
+                             hover:bg-[#4752C4] transition-all duration-300 transform hover:scale-105"
+                  >
+                    Đăng nhập với Discord
+                  </button>
+                </div>
+              )}
+
+              {error && (
+                <div className="mt-4 p-4 bg-red-50 text-red-700 rounded-lg text-center">
+                  {error}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="md:col-span-3">
+            <div className="bg-white rounded-lg shadow-lg p-6 sticky top-8">
+              <h2 className="text-2xl font-bold text-red-800 mb-4">🎊 Lời Chúc Năm Mới</h2>
+              <div className="space-y-4 text-center">
+                <p className="text-red-600 font-medium">
+                  Chúc Mừng Năm Mới
+                </p>
+                <p className="text-yellow-600">
+                  Vạn Sự Như Ý
+                </p>
+                <p className="text-red-600">
+                  Tài Lộc Đầy Nhà
+                </p>
+                <p className="text-yellow-600">
+                  An Khang Thịnh Vượng
+                </p>
+                <div className="pt-4">
+                  <span className="text-6xl">🧧</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Lucky coins */}
+      <div className="coins-container">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="coin"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export default LuckyDraw; 

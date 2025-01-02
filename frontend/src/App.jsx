@@ -1,34 +1,30 @@
 import React from 'react';
-import { AuthProvider } from './contexts/AuthContext';
-import { useAuth } from './contexts/AuthContext';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LuckyDraw from './components/LuckyDraw';
-import Login from './components/Login';
+import AdminLogin from './components/AdminLogin';
+import AdminDashboard from './components/AdminDashboard';
 import DiscordCallback from './components/DiscordCallback';
-
-function AppContent() {
-    const { isAuthenticated, loading } = useAuth();
-    const isCallbackRoute = window.location.pathname === '/callback';
-
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (isCallbackRoute) {
-        return <DiscordCallback />;
-    }
-
-    if (!isAuthenticated) {
-        return <Login />;
-    }
-
-    return <LuckyDraw />;
-}
+import PrivateRoute from './components/PrivateRoute';
+import NotFound from './components/NotFound';
 
 function App() {
     return (
-        <AuthProvider>
-            <AppContent />
-        </AuthProvider>
+        <Router>
+            <Routes>
+                <Route path="/" element={<LuckyDraw />} />
+                <Route path="/callback" element={<DiscordCallback />} />
+                <Route path="/admin" element={<AdminLogin />} />
+                <Route 
+                    path="/admin/dashboard" 
+                    element={
+                        <PrivateRoute>
+                            <AdminDashboard />
+                        </PrivateRoute>
+                    } 
+                />
+                <Route path="*" element={<NotFound />} />
+            </Routes>
+        </Router>
     );
 }
 
